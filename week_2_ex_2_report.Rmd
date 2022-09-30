@@ -1,3 +1,14 @@
+---
+title: "week_2_ex_2"
+output: html_document
+date: "2022-09-30"
+---
+
+## R Markdown
+
+This code allows to simulate the peeking performed in the power poses paper, and how it artificially increases the proportion of rejections of the null hypothesis (while the distribution actually does not change) :
+
+```{r}
 peeking <- function(a=25,b=10,c=7,d=5){
   x <- rnorm(25)
   Tstat <- mean(x)/sd(x)*sqrt(length(x))
@@ -24,5 +35,4 @@ peeking <- function(a=25,b=10,c=7,d=5){
 set.seed(517)
 Tstats <- sapply(1:10000,peeking)
 mean(I(abs(Tstats) > qnorm(0.975)))
-
-
+```
