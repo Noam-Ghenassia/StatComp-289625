@@ -1,0 +1,98 @@
+---
+title: "assignment_week_4"
+author: "Noam Ghenassia"
+date: "2022-10-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+In this week's assignment, the aim was to compare the effects of varying the bandwidth and kernel of the kernel density estimator. We generated a bimodal mixture distribution, and drew 200 sets of 100 observations from it. We then proceeded to estimate the density function using 9 different bandwidths and 3 kernels (the epanechnikov, gaussian and rectangular kernels).
+
+Since the original distribution was known, we could compare it with the obtained estimations (using the 2-norm, i.e., $e = \lVert \hat{f} - f \rVert_2$). the following plot shows the aggregated results : the results are grouped by bandwidth :
+
+```{r errors_plot}
+library(tibble)
+library(ggplot2)
+
+rmixnorm <- function(N, mu1, mu2, sigma1, sigma2, tau){
+  ind <- I(runif(N) > tau)
+  X <- rep(0,N)
+  X[ind] <- rnorm(sum(ind), mu1, sigma1)
+  X[!ind] <- rnorm(sum(!ind), mu2, sigma2)
+  return(X)
+}
+
+dmixnorm <- function(x, mu1, mu2, sigma1, sigma2, tau){
+  y <- (1-tau)*dnorm(x,mu1,sigma1) + tau*dnorm(x,mu2,sigma2)
+  return(y)
+}
+
+N <- 100
+mu1 <- 3
+mu2 <- 0
+sigma1 <- 0.5
+sigma2 <- 1
+tau <- 0.6
+
+
+
+bandwidths = seq(from=0.1, to=0.9, by=0.1)
+
+errors <- c()
+bws <- c()
+kernels <- c()
+
+x <- seq(-3, 6, by=0.01)
+
+for (d in 1:200) {
+  data <- rmixnorm(N, mu1, mu2, sigma1, sigma2, tau)
+  f <- matrix(dmixnorm(x, mu1, mu2, sigma1, sigma2, tau))
+  
+  for (bandwidth in bandwidths) {
+    
+    kde_rect = density(data, bw = bandwidth,
+                       kernel = 'rectangular',
+                       n=901, from=-3, to=6)
+    fhat_rect <- matrix(unlist(kde_rect[2]))
+    rect_error = norm(fhat_rect - f)
+    errors <- append(errors, rect_error)
+    bws <- append(bws, as.character(bandwidth))
+    kernels <- append(kernels, 'rectangle')
+    
+    kde_epan = density(data, bw = bandwidth,
+                       kernel = 'epanechnikov',
+                       n=901, from=-3, to=6)
+    fhat_epan <- matrix(unlist(kde_epan[2]))
+    epan_error = norm(fhat_epan - f)
+    errors <- append(errors, epan_error)
+    bws <- append(bws, as.character(bandwidth))
+    kernels <- append(kernels, 'epanechnikov')
+    
+    kde_gauss = density(data, bw = bandwidth,
+                        kernel = 'gaussian',
+                        n=901, from=-3, to=6)
+    fhat_gauss <- matrix(unlist(kde_gauss[2]))
+    gauss_error = norm(fhat_gauss - f)
+    errors <- append(errors, gauss_error)
+    bws <- append(bws, as.character(bandwidth))
+    kernels <- append(kernels, 'gaussian')
+  }
+}
+
+e <- c(errors)
+b <- c(bws)
+k <- c(kernels)
+
+ggplot(mapping=aes(x=b,
+                  y=e,
+                  fill=k)) + geom_boxplot()
+```
+
+We can observe that similar bandwidths yield similar errors, while in general using different kernels does not have a dramatic effect on the error. The optimal bandwidth for this distribution with 100 observations appears to be somewhere between 0.3 and 0.4.
+
+Finally, we can observe that as the bandwidth gets larger, the errors become more concentrated around different values for each kernel. On the other hand, smaller bandwidths yield a larger variance among the errors for all three kernels, but the average errors for the different kernels are relatively simmilar. This can be understood as a manifestation of the bias-variance tradeoff : for a large bandwidth, the variability among the drawn datasets has a smaller effect, while different kernel functions may have more importance. On the other hand, smaller badwidths have the opposite effect : the variability among the data sets have a bigger effect, but the average errors are more similar. The higher errors obtained with the smallest bandwidths might be due to some kind of "overfitting" of the dataset.
