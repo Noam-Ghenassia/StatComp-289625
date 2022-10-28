@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## R Markdown
 
-In this week's assignment, the objective is to observe how the optimal bandwidth $h_{opt}$ of a regression varies with the parameters of the distribution we are fitting. We will be computing the optimal $h_{opt}$ for a set of $n$ iid copies of a bivariate random vector $\{(X_i, Y_i)^T\}_{i \in 1,...,n}$, where $X \sim Beta(\beta_1, \beta_2)$ and $Y = sin(\frac{1}{X/3 + 0.01}) + \epsilon$, with $\epsilon \sim \mathcal{N}(0, \sigma^2)$. The following plot shows the function $m(x) = sin(\frac{1}{x/3 + 0.01})$ along with a sample drawn from our distribution (with $\beta_1 = \beta_2 = 1$ and $\sigma^2=0.1$ for the sake of clarity) :
+In this week's assignment, the objective is to observe how the optimal bandwidth $h_{opt}$ of a regression varies with the parameters of the distribution we are fitting. We will be computing the optimal $h_{opt}$ for a set of $n$ iid copies of a bivariate random vector $\{(X_i, Y_i)^T\}_{i \in 1,...,n}$, where $X \sim Beta(\beta_1, \beta_2)$ and $Y = sin(\frac{1}{X/3 + 0.1}) + \epsilon$, with $\epsilon \sim \mathcal{N}(0, \sigma^2)$. The following plot shows the function $m(x) = sin(\frac{1}{x/3 + 0.01})$ along with a sample drawn from our distribution (with $\beta_1 = \beta_2 = 1$ and $\sigma^2=0.1$ for the sake of clarity, even though for the rest of the assignment the value of $\sigma^2$ will be $1$) :
 
 ```{r m(x)}
 library(ggplot2)
@@ -24,7 +24,7 @@ b <- function(x){
 x_lin <- seq(0, 1, by=0.01)
 
 m <- function(x){
-  return(sin(1/(x/3 + 0.01)))
+  return(sin(1/(x/3 + 0.1)))
 }
 
 y_lin <- m(x_lin)
@@ -43,7 +43,7 @@ ggplot(df1, aes(x, y)) +
 
 The optimal values $h_{opt}$ are given by $h_{opt}(x) = n^{-1/5} \left[ \frac{\sigma^2 \int [K(z)]^2 dz}{[m''(x) \int z^2 K(z) dz]^2 f_X(x)} \right]^{1/5}$. We will now proceed to compute $h_{opt}(x)$, $x \in [0, 1]$ while varying the parameters $\beta_1$, $\beta_2$ of the distribution of $X$ and the number $n$ of samples drawn from it.
 
-Here, we fix $\beta_1 = 1$ :
+Here, we fix $\beta_1 = 1$ and plot $h_{opt}$ as a function of $x$ and $n$ for $\beta_2 = 1, 2, 3$:
 
 ```{r plots_1}
 
@@ -109,7 +109,7 @@ plot3 <- ggplot(data=df, aes(x=x)) +
 ggarrange(plot1, plot2, plot3, ncol=1)
 ```
 
-Here, we fix $\beta_1 = 2$ :
+Here, we fix $\beta_1 = 2$ and plot $h_{opt}$ as a function of $x$ and $n$ for $\beta_2 = 1, 2, 3$:
 
 ```{r plots_2}
 h_opt <- function(x, shape1, shape2, n) {
@@ -174,7 +174,7 @@ plot3 <- ggplot(data=df, aes(x=x)) +
 ggarrange(plot1, plot2, plot3, ncol=1)
 ```
 
-Here, we fix $\beta_1 = 3$ :
+Here, we fix $\beta_1 = 3$ and plot $h_{opt}$ as a function of $x$ and $n$ for $\beta_2 = 1, 2, 3$:
 
 ```{r plots_3}
 h_opt <- function(x, shape1, shape2, n) {
