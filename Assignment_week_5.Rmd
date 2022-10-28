@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## R Markdown
 
-In this week's assignment, the objective is to observe how the optimal bandwidth $h_{opt}$ of a regression varies with the parameters of the distribution we are fitting. We will be computing the optimal $h_{opt}$ for a set of $n$ iid copies of a bivariate random vector $\{(X_i, Y_i)^T\}_{i \in 1,...,n}$, where $X \sim Beta(\beta_1, \beta_2)$ and $Y = sin(\frac{1}{X/3 + 0.1}) + \epsilon$, with $\epsilon \sim \mathcal{N}(0, \sigma^2)$. The following plot shows the function $m(x) = sin(\frac{1}{x/3 + 0.01})$ along with a sample drawn from our distribution (with $\beta_1 = \beta_2 = 1$ and $\sigma^2=0.1$ for the sake of clarity, even though for the rest of the assignment the value of $\sigma^2$ will be $1$) :
+In this week's assignment, the objective is to observe how the optimal bandwidth $h_{opt}$ of a regression varies with the parameters of the distribution we are fitting. We will be computing the optimal $h_{opt}$ for a set of $n$ iid copies of a bivariate random vector $\{(X_i, Y_i)^T\}_{i \in 1,...,n}$, where $X \sim Beta(\beta_1, \beta_2)$ and $Y = sin(\frac{1}{X/3 + 0.1}) + \epsilon$, with $\epsilon \sim \mathcal{N}(0, \sigma^2)$. The following plot shows the function $m(x) = sin(\frac{1}{x/3 + 0.1})$ along with a sample drawn from our distribution (with $\beta_1 = \beta_2 = 1$ and $\sigma^2=0.1$ for the sake of clarity, even though for the rest of the assignment the value of $\sigma^2$ will be $1$) :
 
 ```{r m(x)}
 library(ggplot2)
