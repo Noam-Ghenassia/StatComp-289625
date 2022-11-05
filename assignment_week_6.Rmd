@@ -1,0 +1,230 @@
+---
+title: "Untitled"
+author: "Noam Ghenassia"
+date: "2022-11-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+In this week's assignment, the aim is to perform cross-validation (CV) on the hyperparameters of a local ploynomial smoother (namely, the degree and bandwidth parameters). For this, we use the mcycle data set (truncated of the times greater than 40). Moreover, we will focus on the degree values $p=1, 2, 3$ and bandwidth values $h = 3, 4,...,15$.
+
+We proceed as follows : for each pair $(p, h)$, we divide the data set into $k$ random subsets of equal size. For each one of them, we use it to evaluate the error of a smoother fitted on the remaining $k-1$ folds, and then we average the obtained $k$ error estimations. We call the resulting value the CV-error for the pair $(p, h)$. The following plot shows these errors for $k=10$ :
+
+
+```{r CV10}
+library(ggplot2)
+library(MASS)
+library(locpol)
+data(mcycle)
+mcycle <- mcycle[mcycle$times <= 40, ]
+colnames(mcycle) <- c('t','a')
+n_samples <- length(mcycle$t)
+
+#######################################
+#######################################
+
+#ggplot(mcycle, aes(x=t, y=a)) +
+# geom_point()
+
+#######################################
+#######################################
+
+degrees <- seq(from=1, to=3, by=1)
+bandwidths <-seq(from=3, to=15, by=1)
+CV_errors <- data.frame(matrix(nrow = 0, ncol = 3))
+colnames(CV_errors) <- c('degree', 'bandwidth', 'error')
+
+folds <- 10
+folds_size <- floor(n_samples/folds)
+
+assignment_vector <- c()
+for (i in seq(1, folds-1, by=1)) {
+  assignment_vector <- c(assignment_vector, rep(i, folds_size))
+}
+assignment_vector <- c(assignment_vector,
+                       rep(folds, n_samples - (folds - 1) * folds_size))
+
+for (degree in degrees) {
+  
+  for (bandwidth in bandwidths) {
+    assign_vect <- sample(assignment_vector)
+    df <- cbind(mcycle, assign_vect)
+    fold_errors <- c()
+    
+    for (fold in folds) {
+      train_set <- subset(df, assign_vect != fold)
+      test_set <- subset(df, assign_vect == fold)
+      
+      fit <- locpol(a ~ t,
+                    data=train_set,
+                    bw=bandwidth,
+                    deg=degree,
+                    xeval=test_set$t)
+      fold_errors <- c(fold_errors,
+                       mean((fit$lpFit$a - test_set$a[order(test_set$t)])^2))
+    }
+    
+    error <- mean(fold_errors)
+    CV_errors[nrow(CV_errors) + 1,] = c(degree, bandwidth, error)
+  }
+}
+
+
+ggplot(CV_errors, aes(x = degree, y = bandwidth, fill = error)) +
+  geom_tile()
+```
+
+Here we repeat the experience with $k = n\_samples$ (i.e., leave-one-out cross-validation) :
+
+```{r CVLOO}
+library(ggplot2)
+library(locpol)
+data(mcycle)
+mcycle <- mcycle[mcycle$times <= 40, ]
+colnames(mcycle) <- c('t','a')
+n_samples <- length(mcycle$t)
+
+#######################################
+#######################################
+
+#ggplot(mcycle, aes(x=t, y=a)) +
+# geom_point()
+
+#######################################
+#######################################
+
+degrees <- seq(from=1, to=3, by=1)
+bandwidths <-seq(from=3, to=15, by=1)
+CV_errors <- data.frame(matrix(nrow = 0, ncol = 3))
+colnames(CV_errors) <- c('degree', 'bandwidth', 'error')
+
+folds <- n_samples
+folds_size <- floor(n_samples/folds)
+
+assignment_vector <- c()
+for (i in seq(1, folds-1, by=1)) {
+  assignment_vector <- c(assignment_vector, rep(i, folds_size))
+}
+assignment_vector <- c(assignment_vector,
+                       rep(folds, n_samples - (folds - 1) * folds_size))
+
+for (degree in degrees) {
+  
+  for (bandwidth in bandwidths) {
+    assign_vect <- sample(assignment_vector)
+    df <- cbind(mcycle, assign_vect)
+    fold_errors <- c()
+    
+    for (fold in folds) {
+      train_set <- subset(df, assign_vect != fold)
+      test_set <- subset(df, assign_vect == fold)
+      
+      fit <- locpol(a ~ t,
+                    data=train_set,
+                    bw=bandwidth,
+                    deg=degree,
+                    xeval=test_set$t)
+      fold_errors <- c(fold_errors,
+                       mean((fit$lpFit$a - test_set$a[order(test_set$t)])^2))
+    }
+    
+    error <- mean(fold_errors)
+    CV_errors[nrow(CV_errors) + 1,] = c(degree, bandwidth, error)
+  }
+}
+
+
+ggplot(CV_errors, aes(x = degree, y = bandwidth, fill = error)) +
+  geom_tile()
+```
+
+As a final sanity check, we plot the data together with the models obtained with the best performing bandwidth for each value of $d$ (according to 10-fold CV, which seems to be a good balance between 2-fold and LOO CV) :
+
+
+```{r data and best models}
+library(ggplot2)
+library(locpol)
+data(mcycle)
+mcycle <- mcycle[mcycle$times <= 40, ]
+colnames(mcycle) <- c('t','a')
+n_samples <- length(mcycle$t)
+
+#d=1, h=8
+best_fit_1 <- locpol(a ~ t,
+                    data=mcycle,
+                    bw=3,
+                    deg=1,
+                    xeval=seq(0, 40, by=0.1))
+
+#d=2, h=6
+best_fit_2 <- locpol(a ~ t,
+                    data=mcycle,
+                    bw=5,
+                    deg=2,
+                    xeval=seq(0, 40, by=0.1))
+
+#d=3, h=14
+best_fit_3 <- locpol(a ~ t,
+                    data=mcycle,
+                    bw=11,
+                    deg=3,
+                    xeval=seq(0, 40, by=0.1))
+
+
+ggplot(mcycle, aes(x=t, y=a)) +
+  geom_point() +
+  geom_line(data=as.data.frame(best_fit_1$lpFit), mapping=aes(x=t, y=a, colour="deg=1")) +
+  geom_line(data=as.data.frame(best_fit_2$lpFit), mapping=aes(x=t, y=a, colour="deg=2")) +
+  geom_line(data=as.data.frame(best_fit_3$lpFit), mapping=aes(x=t, y=a, colour="deg=3")) +
+  scale_colour_manual("", 
+                      breaks = c("deg=1", "deg=2", "deg=3"),
+                      values = c("red", "green", "blue"))
+  
+```
+
+Here we reproduce the previous plot, but with the worst performing bandwidth for each degree :
+
+```{r data and worst models}
+library(ggplot2)
+library(locpol)
+data(mcycle)
+mcycle <- mcycle[mcycle$times <= 40, ]
+colnames(mcycle) <- c('t','a')
+n_samples <- length(mcycle$t)
+
+#d=1, h=8
+best_fit_1 <- locpol(a ~ t,
+                    data=mcycle,
+                    bw=8,
+                    deg=1,
+                    xeval=seq(0, 40, by=0.1))
+
+#d=2, h=6
+best_fit_2 <- locpol(a ~ t,
+                    data=mcycle,
+                    bw=6,
+                    deg=2,
+                    xeval=seq(0, 40, by=0.1))
+
+#d=3, h=14
+best_fit_3 <- locpol(a ~ t,
+                    data=mcycle,
+                    bw=14,
+                    deg=3,
+                    xeval=seq(0, 40, by=0.1))
+
+
+ggplot(mcycle, aes(x=t, y=a)) +
+  geom_point() +
+  geom_line(data=as.data.frame(best_fit_1$lpFit), mapping=aes(x=t, y=a, colour="deg=1")) +
+  geom_line(data=as.data.frame(best_fit_2$lpFit), mapping=aes(x=t, y=a, colour="deg=2")) +
+  geom_line(data=as.data.frame(best_fit_3$lpFit), mapping=aes(x=t, y=a, colour="deg=3")) +
+  scale_colour_manual("", 
+                      breaks = c("deg=1", "deg=2", "deg=3"),
+                      values = c("red", "green", "blue"))
+  
+```
