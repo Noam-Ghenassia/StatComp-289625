@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Assignment week 6"
 author: "Noam Ghenassia"
 date: "2022-11-05"
 output: html_document
@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
 In this week's assignment, the aim is to perform cross-validation (CV) on the hyperparameters of a local ploynomial smoother (namely, the degree and bandwidth parameters). For this, we use the mcycle data set (truncated of the times greater than 40). Moreover, we will focus on the degree values $p=1, 2, 3$ and bandwidth values $h = 3, 4,...,15$.
 
 We proceed as follows : for each pair $(p, h)$, we divide the data set into $k$ random subsets of equal size. For each one of them, we use it to evaluate the error of a smoother fitted on the remaining $k-1$ folds, and then we average the obtained $k$ error estimations. We call the resulting value the CV-error for the pair $(p, h)$. The following plot shows these errors for $k=10$ :
@@ -23,15 +22,6 @@ data(mcycle)
 mcycle <- mcycle[mcycle$times <= 40, ]
 colnames(mcycle) <- c('t','a')
 n_samples <- length(mcycle$t)
-
-#######################################
-#######################################
-
-#ggplot(mcycle, aes(x=t, y=a)) +
-# geom_point()
-
-#######################################
-#######################################
 
 degrees <- seq(from=1, to=3, by=1)
 bandwidths <-seq(from=3, to=15, by=1)
@@ -64,8 +54,10 @@ for (degree in degrees) {
                     bw=bandwidth,
                     deg=degree,
                     xeval=test_set$t)
+      #fold_errors <- c(fold_errors,
+      #                 mean((fit$lpFit$a - test_set$a[order(test_set$t)])^2))
       fold_errors <- c(fold_errors,
-                       mean((fit$lpFit$a - test_set$a[order(test_set$t)])^2))
+                       mean((fit$lpFit$a - test_set$a)^2))
     }
     
     error <- mean(fold_errors)
@@ -87,15 +79,6 @@ data(mcycle)
 mcycle <- mcycle[mcycle$times <= 40, ]
 colnames(mcycle) <- c('t','a')
 n_samples <- length(mcycle$t)
-
-#######################################
-#######################################
-
-#ggplot(mcycle, aes(x=t, y=a)) +
-# geom_point()
-
-#######################################
-#######################################
 
 degrees <- seq(from=1, to=3, by=1)
 bandwidths <-seq(from=3, to=15, by=1)
@@ -128,8 +111,10 @@ for (degree in degrees) {
                     bw=bandwidth,
                     deg=degree,
                     xeval=test_set$t)
+      #fold_errors <- c(fold_errors,
+      #                 mean((fit$lpFit$a - test_set$a[order(test_set$t)])^2))
       fold_errors <- c(fold_errors,
-                       mean((fit$lpFit$a - test_set$a[order(test_set$t)])^2))
+                       mean((fit$lpFit$a - test_set$a)^2))
     }
     
     error <- mean(fold_errors)
