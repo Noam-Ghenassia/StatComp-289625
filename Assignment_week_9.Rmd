@@ -9,22 +9,104 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
+## Comparing methods for generation of normal samples
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+In this week's assignment, we compare three different methods for generating samples from the normal distribution : the native rnorm method from R, the Box-Muller transform, and the rejection sampling method. We will compare the efficiencies of the methods and the quality of the generated samples. For each method, we will generate simulation runs of $10^5$ samples each. The efficiency will be assessed by comparing the average time per simulation, while the quality of the samples will be assessed from the Kolmogorov-Smirnov statistics.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# native rnorm using the inverse transform
 
-```{r cars}
-summary(cars)
+Here, we take a look at the native rnorm method :
+
+```{r inverse transform}
+set.seed(3)
+times <- c()
+KS <- c()
+
+for (sample in 1:50){
+  before = Sys.time()
+  X <- rnorm(10^5)
+  times <- append (times, Sys.time()-before)
+  F_hat <- ecdf(X)
+  F_hat_eval <- F_hat(sort(X))
+  F_eval <- pnorm(sort(X))
+  KS_stats <- max(abs(F_hat_eval - F_eval))
+  KS <- append(KS, KS_stats)
+}
+
+cat("average time : ", mean(times), "s with standard deviation ", sd(times),
+    "\n average KS statistic : ", mean(KS), " with standard deviation ", sd(KS))
 ```
 
-## Including Plots
+# Box-Muller transform
 
-You can also embed plots, for example:
+Here, we repeat the experience with the Box-Muller transform :
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r Box-Muller}
+set.seed(1)
+times <- c()
+KS <- c()
+
+for (sample in 1:50){
+  before = Sys.time()
+  
+  U1 <- runif(10^5)
+  U2 <- runif(10^5)
+  X <- sqrt(-2*log(U1))*cos(2*pi*U2)
+  
+  times <- append (times, Sys.time()-before)
+  F_hat <- ecdf(X)
+  F_hat_eval <- F_hat(sort(X))
+  F_eval <- pnorm(sort(X))
+  KS_stats <- max(abs(F_hat_eval - F_eval))
+  KS <- append(KS, KS_stats)
+}
+
+cat("average time : ", mean(times), "s with standard deviation ", sd(times),
+    "\n average KS statistic : ", mean(KS), " with standard deviation ", sd(KS))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+# Rejection sampling
+
+Finally, we take a look at the rejection sampling method :
+
+```{r rejection sampling}
+set.seed(1)
+times <- c()
+KS <- c()
+
+
+acc_rej_dexp_norm <- function(M){
+  U <- runif(1)*M
+  sings <- c(-1,1)
+  Y <- rexp(1)*sample(sings,1)
+  while (U>dnorm(Y)/dexp(abs(Y))/2/M){
+      U <- runif(1)*M
+      Y <- rexp(1)*sample(sings,1)
+  }
+  return(Y)
+}
+
+for (sample in 1:50){
+  before = Sys.time()
+  
+  X <- rep(0,10^5)
+  for (j in 1:10^5) {
+    M <- optimize(f=function(x){dnorm(x)/dexp(abs(x))*2}, interval=c(0,5),maximum=T)$objective
+    X[j] <- acc_rej_dexp_norm(M)
+  }
+  
+  times <- append (times, Sys.time()-before)
+  F_hat <- ecdf(X)
+  F_hat_eval <- F_hat(sort(X))
+  F_eval <- pnorm(sort(X))
+  KS_stats <- max(abs(F_hat_eval - F_eval))
+  KS <- append(KS, KS_stats)
+}
+
+cat("average time : ", mean(times), "s with standard deviation ", sd(times),
+    "\n average KS statistic : ", mean(KS), " with standard deviation ", sd(KS))
+```
+
+
+It appears that all three methods achieve fairly similar p-values at the Kolmogorov-Smirnov test (around 0.0026). The quality of the samples generated from all three methods is therefore similar. The efficiencies of the methods, on the other hand, are wildly different. It was expected that the native rnorm method would provide the best performance, as the bulk of the calculation was performed "in advance" (as the values of the distribution were tabulated), and indeed the method takes an average 0.0028 seconds per simulation run. The Box-Muller transform is more than 3 times slower, with an average 0.0084 seconds per run. However, the rejection sampling method is by far the worst performing, with an average 5.9 seconds per run. This might be related to two different issues : first, each sample is generated individually in a for loop, which impedes optimizations. Perhaps more crucially, each sample requires the generation of at least one, but possibly more samples from the doubly exponential distribution (hence the name, rejection sampling).
