@@ -1,0 +1,18 @@
+---
+title: "Assignment_week_11"
+author: "Noam Ghenassia"
+date: "2022-12-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+
+
+```{r cars}
+summary(cars)
+```
