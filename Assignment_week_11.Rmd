@@ -9,10 +9,75 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
+## coverage of confidence intervals
 
 
-
-```{r cars}
-summary(cars)
+```{r}
+alpha <- 0.95
+z_alpha <- qnorm(alpha)
+print(z_alpha)
+n_obs <- 100
+repeats <- 10^3
+n_resamples <- 1000
 ```
+
+In this assignment, we will compare the quality of asymptotic, studentized, non-studentized and sample-truth-scaled confidence intervals. To do that, we generate $10^3$ samples of 100 observations each, drawn from the exponential distribution with parameter $\lambda = 2$. For each sample, we then generate a confidence interval for the mean $\mathbb{E}[X] = 1/\lambda$ and verify whether it contains the true value $\mathbb{E}[X]=1/2$. the quality of the confidence interval can then be assessed from the coverage proportion, i.e., the fraction of CI's that conttain the true value. The results are as follows :
+
+for the asymptotic distribution :
+
+```{r assymptotic_coverage}
+assymptotic_coverage_count <- 0
+for (i in 1:repeats){
+  X <- rexp(100, rate = 2)
+  asymptotic <- mean(X) + z_alpha*sd(X)/sqrt(100)
+  if (asymptotic >= 0.5){assymptotic_coverage_count <- assymptotic_coverage_count + 1}
+}
+
+print(assymptotic_coverage_count/repeats)
+```
+
+For the studentized CI :
+
+```{r studentized_coverage}
+studentized_coverage_count <- 0
+for (i in 1:repeats){
+  X <- rexp(100, rate = 2)
+  boot <- sample(1:100, size = 100*n_resamples, replace = T)
+  boot_data <- matrix(X[boot], ncol = B)
+  
+  if (){studentized_coverage_count <- assymptotic_coverage_count + 1}
+}
+
+print(studentized_coverage_count/repeats)
+```
+
+For the non-studentized CI :
+
+```{r non_studentized_coverage}
+studentized_coverage_count <- 0
+for (i in 1:repeats){
+  X <- rexp(100, rate = 2)
+  boot <- sample(1:100, size = 100*n_resamples, replace = T)
+  boot_data <- matrix(X[boot], ncol = B)
+  
+  if (){studentized_coverage_count <- assymptotic_coverage_count + 1}
+}
+
+print(studentized_coverage_count/repeats)
+```
+
+for the sample-truth-scaled :
+
+```{r sample_truth_scaled_coverage}
+studentized_coverage_count <- 0
+for (i in 1:repeats){
+  X <- rexp(100, rate = 2)
+  boot <- sample(1:100, size = 100*n_resamples, replace = T)
+  boot_data <- matrix(X[boot], ncol = B)
+  
+  if (){studentized_coverage_count <- assymptotic_coverage_count + 1}
+}
+
+print(studentized_coverage_count/repeats)
+```
+
