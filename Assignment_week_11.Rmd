@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = FALSE)
 alpha <- 0.95
 z_alpha <- qnorm(alpha)
 n_obs <- 100
-repeats <- 10^3
+repeats <- 10^2
 n_resamples <- 1000
 ```
 
@@ -39,7 +39,7 @@ For the studentized CI :
 
 ```{r studentized_coverage}
 studentized_coverage_count <- 0
-for (i in 1:100){
+for (i in 1:repeats){
   X <- rexp(100, rate = 2)
   boot <- sample(1:n_obs, size = 100*n_resamples, replace = T)
   boot_data <- matrix(X[boot], ncol = n_resamples)
@@ -60,7 +60,7 @@ For the non-studentized CI :
 ```{r non_studentized_coverage}
 non_studentized_coverage_count <- 0
 repeat_count <- 0
-for (i in 1:100){
+for (i in 1:repeats){
   repeat_count <- repeat_count +1
   X <- rexp(100, rate = 2)
   boot <- sample(1:n_obs, size = 100*n_resamples, replace = T)
