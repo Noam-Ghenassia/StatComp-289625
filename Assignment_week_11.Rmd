@@ -15,7 +15,6 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r}
 alpha <- 0.95
 z_alpha <- qnorm(alpha)
-print(z_alpha)
 n_obs <- 100
 repeats <- 10^3
 n_resamples <- 1000
@@ -40,12 +39,17 @@ For the studentized CI :
 
 ```{r studentized_coverage}
 studentized_coverage_count <- 0
-for (i in 1:repeats){
+for (i in 1:100){
   X <- rexp(100, rate = 2)
-  boot <- sample(1:100, size = 100*n_resamples, replace = T)
-  boot_data <- matrix(X[boot], ncol = B)
-  
-  if (){studentized_coverage_count <- assymptotic_coverage_count + 1}
+  boot <- sample(1:n_obs, size = 100*n_resamples, replace = T)
+  boot_data <- matrix(X[boot], ncol = n_resamples)
+  T_star <- c()
+  for (b in 1:n_resamples){
+    tstar <- sqrt(n_obs)*(mean(boot_data[,b])-mean(X))/sd(boot_data[,b])
+    T_star[b] <- append(T_star, tstar)
+  }
+  studentized <- mean(X) + quantile(T_star, 0.95)*sd(X)/sqrt(100)
+  if (studentized >= 0.5){studentized_coverage_count <- studentized_coverage_count + 1}
 }
 
 print(studentized_coverage_count/repeats)
@@ -54,30 +58,42 @@ print(studentized_coverage_count/repeats)
 For the non-studentized CI :
 
 ```{r non_studentized_coverage}
-studentized_coverage_count <- 0
-for (i in 1:repeats){
+non_studentized_coverage_count <- 0
+repeat_count <- 0
+for (i in 1:100){
+  repeat_count <- repeat_count +1
   X <- rexp(100, rate = 2)
-  boot <- sample(1:100, size = 100*n_resamples, replace = T)
-  boot_data <- matrix(X[boot], ncol = B)
-  
-  if (){studentized_coverage_count <- assymptotic_coverage_count + 1}
+  boot <- sample(1:n_obs, size = 100*n_resamples, replace = T)
+  boot_data <- matrix(X[boot], ncol = n_resamples)
+  T_star <- c()
+  for (b in 1:n_resamples){
+    tstar <- sqrt(n_obs)*(mean(boot_data[,b])-mean(X))
+    T_star[b] <- append(T_star, tstar)
+  }
+  non_studentized <- mean(X) + quantile(T_star, 0.95)*sd(X)/sqrt(100)
+  if (non_studentized >= 0.5){non_studentized_coverage_count <- non_studentized_coverage_count + 1}
 }
 
-print(studentized_coverage_count/repeats)
+print(non_studentized_coverage_count/repeats)
 ```
 
 for the sample-truth-scaled :
 
 ```{r sample_truth_scaled_coverage}
-studentized_coverage_count <- 0
+sample_truth_scaled_coverage_count <- 0
 for (i in 1:repeats){
   X <- rexp(100, rate = 2)
   boot <- sample(1:100, size = 100*n_resamples, replace = T)
-  boot_data <- matrix(X[boot], ncol = B)
-  
-  if (){studentized_coverage_count <- assymptotic_coverage_count + 1}
+  boot_data <- matrix(X[boot], ncol = n_resamples)
+  T_star <- c()
+  for (b in 1:n_resamples){
+    tstar <- sqrt(n_obs)*(mean(boot_data[,b])-mean(X))/sd(X)
+    T_star[b] <- append(T_star, tstar)
+  }
+  sample_truth_scaled <- mean(X) + quantile(T_star, 0.95)*sd(X)/sqrt(100)
+  if (sample_truth_scaled >= 0.5){sample_truth_scaled_coverage_count <- sample_truth_scaled_coverage_count + 1}
 }
 
-print(studentized_coverage_count/repeats)
+print(sample_truth_scaled_coverage_count/repeats)
 ```
 
